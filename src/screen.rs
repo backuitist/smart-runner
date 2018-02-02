@@ -23,6 +23,7 @@ macro_rules! write_highlighted {
                color::Fg(color::Reset)))
 }
 
+#[derive(Default)]
 pub struct Screen {
     x: u16,
     y: u16,
@@ -63,13 +64,8 @@ impl Screen {
             prompt: "> ".to_owned(),
             x: 1,
             y: 1, // y - vertical_size,
-            current_line: Vec::new(),
-            validated_keywords: Vec::new(),
-            auto_complete: Vec::new(),
-            selected_auto_complete_index: None,
-            selected_command_index: None,
-            commands: Vec::new(),
-            term_size
+            term_size,
+            ..Default::default()
         };
         screen.print(stdout)?;
 
