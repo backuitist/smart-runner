@@ -2,7 +2,7 @@
 use std::rc::Rc;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Clone, Hash, Eq, PartialEq)]
+#[derive(Clone, Hash, Eq, PartialEq, Debug)]
 pub struct Command {
     pub cmd: String,
     pub description: Option<String>,
@@ -23,6 +23,10 @@ pub struct Commands {
 impl Commands {
     pub fn new(vec_commands: Vec<Command>) -> Commands {
         let commands: Vec<Rc<Command>> = vec_commands.into_iter().map(|cmd| Rc::new(cmd)).collect();
+        Commands::new_rc(commands)
+    }
+
+    pub fn new_rc(commands: Vec<Rc<Command>>) -> Commands {
         let mut kwd2cmd: HashMap<String, HashSet<Rc<Command>>> = HashMap::new();
         for cmd in &commands {
             for kw in &cmd.keywords {

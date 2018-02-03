@@ -1,6 +1,9 @@
 extern crate termion;
 extern crate itertools;
 
+#[cfg(test)] #[macro_use] extern crate hamcrest;
+#[cfg(test)] #[macro_use] extern crate maplit; // provide `hashset!`
+
 mod screen;
 mod command;
 mod suggestion;
@@ -9,8 +12,7 @@ use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::{IntoRawMode, RawTerminal};
 use std::io::{Write, stdin, stderr, Stderr};
-use std::collections::{HashMap, HashSet};
-use std::rc::Rc;
+use std::collections::HashSet;
 
 use command::{Command, Commands};
 use screen::{Screen, ValidatedKeyword};
