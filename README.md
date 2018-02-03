@@ -27,4 +27,5 @@ end
 
 ## TODO
 
+* Do not clear the terminal -> do something like fzf
 * Nix package with fish config
