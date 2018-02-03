@@ -8,6 +8,8 @@ use command::Command;
 use std::fmt::Write as FmtWrite;
 use itertools::Itertools;
 
+use suggestion::Suggestion;
+
 type Result<T> = ::std::result::Result<T, Box<::std::error::Error>>;
 
 
@@ -35,13 +37,6 @@ pub struct Screen {
     commands: Vec<Rc<Command>>,
     selected_command_index: Option<usize>,
     term_size: (u16,u16)
-}
-
-
-#[derive(Default)]
-pub struct Suggestion {
-    pub keywords: Vec<String>,
-    pub commands: Vec<Rc<Command>>,
 }
 
 

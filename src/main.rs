@@ -3,6 +3,7 @@ extern crate itertools;
 
 mod screen;
 mod command;
+mod suggestion;
 
 use termion::event::Key;
 use termion::input::TermRead;
@@ -11,8 +12,9 @@ use std::io::{Write, stdin, stderr, Stderr};
 use std::collections::{HashMap, HashSet};
 use std::rc::Rc;
 
-use command::Command;
+use command::{Command, Commands};
 use screen::{Screen, ValidatedKeyword};
+use suggestion::Suggestion;
 
 type Result<T> = std::result::Result<T, Box<std::error::Error>>;
 
@@ -62,25 +64,6 @@ enum InputLoopAction {
     Continue, Cancel, Success(String)
 }
 
-struct Commands {
-    commands: Vec<Rc<Command>>,
-    kwd2cmd: HashMap<String, HashSet<Rc<Command>>>
-}
-
-impl Commands {
-    fn new(vec_commands: Vec<Command>) -> Commands {
-        let commands: Vec<Rc<Command>> = vec_commands.into_iter().map(|cmd| Rc::new(cmd)).collect();
-        let mut kwd2cmd: HashMap<String, HashSet<Rc<Command>>> = HashMap::new();
-        for cmd in &commands {
-            for kw in &cmd.keywords {
-                let set = kwd2cmd.entry(kw.clone()).or_insert(HashSet::new());
-                set.insert(cmd.clone());
-            }
-        }
-
-        Commands { commands, kwd2cmd }
-    }
-}
 
 impl Runner {
     fn new(vec_commands: Vec<Command>) -> Result<Runner> {
@@ -170,10 +153,20 @@ impl Runner {
     }
 
     fn filter_commands(self: &mut Runner) {
-        let suggestion = filter_commands_with(
-            &self.commands,
-            self.screen.input().as_ref(),
-            self.screen.validated_keywords.iter());
+
+        let suggestion = {
+            // nest `validated_keywords` as it borrows self immutably
+            let validated_keywords: HashSet<&String> = self.screen.validated_keywords.iter()
+                .filter_map(|v| match v {
+                    &ValidatedKeyword::Valid(ref kw) => Some(kw),
+                    _ => None
+                }).collect();
+
+            Suggestion::from_input(
+                &self.commands,
+                self.screen.input().as_ref(),
+                validated_keywords)
+        };
 
         self.screen.set_suggestion(suggestion);
     }
@@ -192,43 +185,3 @@ impl Runner {
         self.screen.print(&mut self.terminal)
     }
 }
-
-fn filter_commands_with<'a, I>(commands: &Commands,
-                               input: &str,
-                               validated_keywords: I) -> screen::Suggestion
-    where I: Iterator<Item=&'a ValidatedKeyword> {
-    let mut suggestion: screen::Suggestion = Default::default();
-
-    let validated_keywords: HashSet<String> = validated_keywords
-        .filter_map(|v| match v {
-            &ValidatedKeyword::Valid(ref kw) => Some(kw),
-            _ => None
-        }).cloned().collect();
-
-    let validated_commands: HashSet<Rc<Command>> = if validated_keywords.is_empty() {
-        commands.commands.iter().cloned().collect()
-    } else {
-        commands.commands.iter().cloned()
-            .filter(|cmd| validated_keywords.iter()
-                .all(|kw| cmd.keywords.contains(kw)))
-            .collect()
-    };
-
-    if input.is_empty() {
-        suggestion.commands.extend(validated_commands);
-    } else {
-        for (kw, cmds) in &commands.kwd2cmd {
-            if kw.starts_with(&input)
-                && !validated_keywords.contains(kw) {
-                suggestion.keywords.push(kw.clone());
-                suggestion.commands.extend(cmds.intersection(&validated_commands)
-                    .cloned());
-            }
-        }
-    }
-
-    suggestion
-}
-
-//#[test]
-//fn
