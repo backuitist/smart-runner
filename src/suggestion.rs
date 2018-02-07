@@ -1,6 +1,6 @@
 
 use std::rc::Rc;
-use command::{Command, Commands};
+use command::{Command, Commands, Placeholders};
 use std::collections::HashSet;
 
 #[derive(Default, Debug)]
@@ -38,7 +38,7 @@ impl Suggestion {
                 }
             }
         }
-        suggestion.commands.sort_by(|c1, c2| c1.cmd.cmp(&c2.cmd));
+        suggestion.commands.sort_by(|c1, c2| c1.cmp(&c2));
 
         suggestion
     }
@@ -81,17 +81,17 @@ mod tests {
             let kw = Keywords::new();
 
             let cmd_nix_env = Rc::new(Command {
-                cmd: "nix-env -q '.*{}.*'".to_owned(),
+                cmd: Placeholders::parse("nix-env -q '.*{}.*'").unwrap(),
                 description: Some("Search a Nix package by name".to_owned()),
                 keywords: vec_clone![kw.nix, kw.search]
             });
             let cmd_nix_store = Rc::new(Command {
-                cmd: "du -sh /nix/store".to_owned(),
+                cmd: Placeholders::parse("du -sh /nix/store").unwrap(),
                 description: Some("Show the size of the Nix store".to_owned()),
                 keywords: vec_clone![kw.nix, kw.store]
             });
             let cmd_shutdown = Rc::new(Command {
-                cmd: "sudo shutdown -h now".to_owned(),
+                cmd: Placeholders::parse("sudo shutdown -h now").unwrap(),
                 description: Some("Shut the system down".to_owned()),
                 keywords: vec_clone![kw.shutdown]
             });

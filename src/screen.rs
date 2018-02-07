@@ -87,9 +87,9 @@ impl Screen {
         self.validated_keywords.push(vkw);
     }
 
-    pub fn selected_command(self: &Screen) -> Option<Rc<Command>> {
+    pub fn selected_command(self: &Screen) -> Option<String> {
         self.selected_command_index.and_then(|idx|
-            self.commands.get(idx).map(|cmd|cmd.clone()))
+            self.commands.get(idx).map(|cmd|cmd.cmd.interpolate(vec!["".to_owned()])))
     }
 
     pub fn next_suggestion(self: &mut Screen) {
@@ -205,11 +205,11 @@ impl Screen {
                 Some(sel) if i == sel =>
                     writeln!(terminal, "{}{} {}{}\r",
                              style::Bold,
-                             cmd.cmd,
+                             cmd.cmd.interpolate(vec!["".to_owned()]),
                              description,
                              style::Reset)?,
                 _ =>
-                    writeln!(terminal, "{} {}\r", cmd.cmd, description)?
+                    writeln!(terminal, "{} {}\r", cmd.cmd.interpolate(vec!["".to_owned()]), description)?
             };
         }
 

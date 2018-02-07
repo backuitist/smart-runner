@@ -1,5 +1,6 @@
 extern crate termion;
 extern crate itertools;
+extern crate regex;
 
 #[cfg(test)] #[macro_use] extern crate hamcrest;
 #[cfg(test)] #[macro_use] extern crate maplit; // provide `hashset!`
@@ -14,7 +15,7 @@ use termion::raw::{IntoRawMode, RawTerminal};
 use std::io::{Write, stdin, stderr, Stderr};
 use std::collections::HashSet;
 
-use command::{Command, Commands};
+use command::{Command, Commands, Placeholders};
 use screen::{Screen, ValidatedKeyword};
 use suggestion::Suggestion;
 
@@ -36,17 +37,17 @@ fn run_runner() -> Result<Option<String>> {
     let mut runner = Runner::new(
         vec![
             Command {
-                cmd: "nix-env -q '.*{}.*'".to_owned(),
+                cmd: Placeholders::parse("nix-env -q '.*{name}.*'")?,
                 description: Some("Search a Nix package by name".to_owned()),
                 keywords: vec!["nix".to_owned(), "search".to_owned(), "package".to_owned()]
             },
             Command {
-                cmd: "du -sh /nix/store".to_owned(),
+                cmd: Placeholders::parse("du -sh /nix/store")?,
                 description: Some("Show the size of the Nix store".to_owned()),
                 keywords: vec!["nix".to_owned(), "store".to_owned(), "size".to_owned()]
             },
             Command {
-                cmd: "sudo shutdown -h now".to_owned(),
+                cmd: Placeholders::parse("sudo shutdown -h now")?,
                 description: Some("Shut the system down".to_owned()),
                 keywords: vec!["hardware".to_owned(), "shutdown".to_owned()]
             }
@@ -119,7 +120,7 @@ impl Runner {
 
             Key::Char('\n') => {
                 if let Some(cmd) = self.screen.selected_command() {
-                    InputLoopAction::Success(cmd.cmd.clone())
+                    InputLoopAction::Success(cmd)
                 } else {
                     InputLoopAction::Continue
                 }

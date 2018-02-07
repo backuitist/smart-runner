@@ -6,6 +6,7 @@ authors = ["Bruno Bieth <biethb@gmail.com>"]
 [dependencies]
 termion = "1"
 itertools = "0.7.6"
+regex = "0.2"
 
 [dev-dependencies]
 hamcrest = "0.1.5"
